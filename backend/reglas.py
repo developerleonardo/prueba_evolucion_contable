@@ -68,3 +68,32 @@ def regla_total(df: pd.DataFrame) -> list[str]:
         else:
             mensajes.append("")
     return mensajes
+
+def regla_duplicados(df: pd.DataFrame) -> list[str]:
+    """Una factura está duplicada si su id aparece más de una vez
+    en el archivo de facturas. Se marcan todas las filas repetidas."""
+    ids = df["id_factura"].str.strip()
+    es_duplicada = ids.duplicated(keep=False) & ids.notna()
+
+    mensajes = []
+    for id_factura, duplicada in zip(ids, es_duplicada):
+        if duplicada:
+            mensajes.append(f"Factura duplicada: el id {id_factura} aparece más de una vez en facturas")
+        else:
+            mensajes.append("")
+    return mensajes
+
+
+def regla_sin_contabilizar(df_facturas: pd.DataFrame, df_contabilidad: pd.DataFrame) -> list[str]:
+    """La factura no tiene ningún registro en el archivo de contabilidad."""
+    ids_contabilizados = set(df_contabilidad["id_factura"].dropna().str.strip())
+
+    mensajes = []
+    for id_factura in df_facturas["id_factura"].str.strip():
+        if pd.notna(id_factura) and id_factura not in ids_contabilizados:
+            mensajes.append("Sin registro contable: el id no aparece en contabilidad")
+        else:
+            mensajes.append("")
+    return mensajes
+
+    
