@@ -41,3 +41,30 @@ def regla_iva(df: pd.DataFrame) -> list[str]:
         else:
             mensajes.append("")
     return mensajes
+
+def regla_total(df: pd.DataFrame) -> list[str]:
+    """total esperado = base gravable + IVA esperado - retención.
+    Se usa el IVA recalculado."""
+    mensajes = []
+    for _, fila in df.iterrows():
+        base = fila["base_gravable"]
+        tarifa = fila["tarifa_iva"]
+        retencion = fila["valor_retencion"]
+        total_factura = fila["total_factura"]
+
+        if pd.isna(base) or pd.isna(tarifa) or pd.isna(retencion) or pd.isna(total_factura):
+            mensajes.append("")
+            continue
+
+        iva_esperado = round(base * tarifa)
+        total_esperado = base + iva_esperado - retencion
+        diferencia = total_factura - total_esperado
+
+        if abs(diferencia) > TOLERANCIA:
+            mensajes.append(
+                f"Total incorrecto: esperado {total_esperado:,.0f}, "
+                f"factura {total_factura:,.0f} (diferencia {diferencia:,.0f})"
+            )
+        else:
+            mensajes.append("")
+    return mensajes
